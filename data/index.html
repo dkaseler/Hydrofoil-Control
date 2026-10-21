@@ -4,15 +4,19 @@
     <meta charset="UTF-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="icon" href="icon.png" />
+    
     <link rel="stylesheet" type="text/css" href="style.css" />
-    <title>Hydrofoil Control</title>
+    <title>Hydrofoil Control R5.1</title>
   </head>
   <body>
     <div class="topnav">
-      <h1>Hydrofoil Control</h1>
+      <h1>Hydrofoil Control R5.1</h1>
     </div>
     <div class="content">
+<div class="card"><p id="mode-status">Connecting…</p><p id="save-status" role="status"></p>
+<form action="/controller/pause" method="POST"><button>Pause control and open testing / recorder</button></form>
+<form action="/controller/resume" method="POST"><button>Resume normal controller</button></form>
+<p><a href="/setup">Device role and connection</a> · <a href="/diagnostics">Diagnostics</a></p></div>
       <div class="card" id="selector-card">
         <p class="card-title">Board Selector</p>
         <select name="board-selector" id="board-selector">
@@ -154,23 +158,23 @@
       </div>
 
       <div class="card" id="wifi-off-card">
-        <p class="card-title">Turn Off WiFi On Master</p>
-        <input type="button" value="WiFi Off" id="wifi-off-button" />
+        <p class="card-title">Hide Hotspot Until Restart</p>
+        <input type="button" value="Hide hotspot" id="wifi-off-button" />
       </div>
 
       <div class="card">
         <p class="card-title">Reset Info</p>
         <div>
-          <p>Re-enable WiFi: close the Reset jumper for 0.2s</p>
-          <p>Factory reset: close the Reset jumper for 5s</p>
-          <p>OTA Upload: close the Reset jumper for 10s</p>
+          <p>Restart the board to restore its hotspot. A brief Reset-jumper connection also restores a hidden hotspot.</p>
+          <p>Saved settings are retained when restarting.</p>
+          <p>Application updates are available through this hotspot without a separate upload mode.</p>
         </div>
       </div>
 
-      <!-- <div class="card">
+      <div class="card">
         <p class="card-title">Master Device Process Values</p>
         <div id="process-values"></div>
-      </div> -->
+      </div>
     </div>
     <script src="script.js"></script>
   </body>

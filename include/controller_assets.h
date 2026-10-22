@@ -8,11 +8,11 @@ static const char kControllerIndex[] PROGMEM = R"R5ASSET(<!DOCTYPE html>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     
     <link rel="stylesheet" type="text/css" href="style.css" />
-    <title>Hydrofoil Control R5.1</title>
+    <title>Hydrofoil Control R5.2</title>
   </head>
   <body>
     <div class="topnav">
-      <h1>Hydrofoil Control R5.1</h1>
+      <h1>Hydrofoil Control R5.2</h1>
     </div>
     <div class="content">
 <div class="card"><p id="mode-status">Connecting…</p><p id="save-status" role="status"></p>
@@ -99,7 +99,7 @@ static const char kControllerIndex[] PROGMEM = R"R5ASSET(<!DOCTYPE html>
         />
         <span id="slider-enable-value" class="value">0</span><br />
 
-        <label for="slider-calibration">Enable Calibration</label>
+        <label for="slider-calibration">Calibration (0 = OFF, 1 = ON)</label>
         <input
           type="range"
           id="slider-calibration"
@@ -109,7 +109,7 @@ static const char kControllerIndex[] PROGMEM = R"R5ASSET(<!DOCTYPE html>
           value="0"
           style="width: 25px"
         />
-        <span id="slider-calibration-value" class="value">0</span><br />
+        <span id="slider-calibration-value" class="value">0</span><br /><p id="calibration-status" role="status">Turn ON, raise and lower the sensor in water, then turn OFF to save.</p>
 
         <label for="slider-servo-min">Servo min position (us)</label>
         <input
@@ -206,6 +206,7 @@ $('submit-button').onclick=async()=>{try{await request('/add-mac',{mac:$('mac-in
 $('remove-slaves-button').onclick=async()=>{try{await request('/remove-slaves',{'remove-slaves':'true'});await refreshPeers();status('Peers removed');}catch(e){status(e.message);}};
 $('wifi-off-button').onclick=async()=>{try{await request('/wifi-off',{'wifi-off':'true'});status('Hotspot will hide. Restart the board to reconnect.');}catch(e){status(e.message);}};
 async function poll(){try{const d=await(await request('/device-status')).json();$('mode-status').textContent=(d.controller_mode==='bench'?'Bench mode: servo output off':'Normal controller active')+' · '+(d.slave?'Slave':'Master')+(d.error?' · '+d.error:'');
+ const cal=await(await request('/diagnostics')).json();$('calibration-status').textContent=cal.calibration_active?('Collecting range · '+cal.calibration_samples+' filtered readings · '+(cal.calibration_range_ready?'Range detected. Turn OFF when finished.':'Raise and lower the sensor in water.')):(cal.calibration_notice||'Calibration OFF');
  const values=await(await request('/get-values')).json();$('process-values').textContent='';for(const [k,v]of Object.entries(values)){const p=document.createElement('p');p.textContent=k+': '+Math.round(v);$('process-values').appendChild(p);}
  }catch(e){$('mode-status').textContent='Connection unavailable';}setTimeout(poll,1000);}
 async function init(){controls(false);try{const d=await(await request('/device-status')).json();if(d.slave){$('selector-card').hidden=true;$('submit-button').disabled=true;$('remove-slaves-button').disabled=true;}await refreshPeers();await loadBoard('master');}catch(e){status(e.message);}poll();}init();

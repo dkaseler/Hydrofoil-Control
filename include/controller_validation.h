@@ -9,8 +9,7 @@ inline bool validControlParams(const dataStruct &p) {
  p.setpoint>=1000&&p.setpoint<=2000&&p.factor>=0&&p.factor<=100&&
  (p.enable==0||p.enable==1)&&(p.calibration==0||p.calibration==1)&&
  p.servoMin>=1000&&p.servoMin<=2000&&p.servoMax>=1000&&p.servoMax<=2000&&
- p.minMeasured>=0&&p.minMeasured<=80000&&p.maxMeasured>=0&&p.maxMeasured<=80000&&
- (p.calibration==1||p.maxMeasured>p.minMeasured);
+ p.minMeasured>=0&&p.minMeasured<=80000&&p.maxMeasured>=0&&p.maxMeasured<=80000;
 }
 inline bool parseMacAddress(const char *s,uint8_t out[6]) {
  if(!s||std::strlen(s)!=17)return false;

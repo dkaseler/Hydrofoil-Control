@@ -1,12 +1,18 @@
-# Hydrofoil Control — R5.1 experimental integration
+# Hydrofoil Control — R5.2 experimental integration
 
-This is a bench-tested development variant of [Tamas Nagy’s Hydrofoil Control](https://github.com/makszimilien/Hydrofoil-Control), based on upstream commit `313d65f16c7b0e84973f84f94e2e8b482160a663`. “R5” and “R5.1” are local development labels, not upstream release names.
+This is a bench-tested development variant of [Tamas Nagy’s Hydrofoil Control](https://github.com/makszimilien/Hydrofoil-Control), based on upstream commit `313d65f16c7b0e84973f84f94e2e8b482160a663`. “R5”, “R5.1” and “R5.2” are local development labels, not upstream release names.
 
 The main aim is to keep the web interface and Wi-Fi service responsive when the capacitance sensor does not complete a reading. This integration also adds a separate control task, diagnostic recording, and explicit settings recovery. It is offered for review and selective incorporation. It is not an on-water validated release.
 
+## Calibration correction
+
+Calibration ON starts a fresh candidate range without erasing the saved range. Valid sensor samples continue to accumulate while normal control is paused, even without a recorder running. OFF saves a usable candidate; otherwise it retains the previous range and still turns calibration off. An unusable saved range prevents resuming control rather than trapping the toggle ON. Persistence failures are reported and do not pretend the save succeeded. Restarted calibration requires OFF then ON to begin again.
+
+The interface reports candidate progress, saved-range status and save results. Host tests exercise actual slider, acquisition, bench, resume and peer handlers. This correction retains the existing 2 ms sensing cutoff and normal controller behavior; temporary 50/500 ms and creator-style diagnostic experiments are excluded. Current package hardware calibration, paired radio and loaded operation remain unverified; earlier R5.1 observations below are historical evidence, not validation of this new binary.
+
 ## Contents and behavior
 
-- `src/`, `include/`, `data/` and `platformio.ini` are the unmodified source and build inputs from the R5.1 application tested on hardware.
+- `src/`, `include/`, `data/` and `platformio.ini` contain the R5.2 calibration correction on the existing R5.1 integration.
 - The normal controller is at `/`, testing and CSV recording at `/bench`, and role/peer setup at `/setup`.
 - Sensor waits are bounded at approximately 2 ms. A failed reading invalidates the rolling window and suspends PID updates; 20 fresh readings are required before normal calculation resumes. The last commanded servo pulse is held during a normal-control sensor fault; it is not a boat-specific fail-safe policy.
 - Normal acquisition targets 500 Hz with a 100 Hz PID cadence. The separate bench recorder targets 100 Hz for 30 seconds. Bench/test actions pause the controller and detach software servo output; resuming control is explicit.
@@ -25,7 +31,7 @@ python -m pip install platformio==6.2.0
 pio run -e esp32-c3-devkitm-1
 ```
 
-The application is produced at `.pio/build/esp32-c3-devkitm-1/firmware.bin`. The tested application was 997,024 bytes and used a 1,310,720-byte application slot. `BUILD-MANIFEST.json` records its hash, source hashes and the library versions resolved for that build.
+The application is produced at `.pio/build/esp32-c3-devkitm-1/firmware.bin`. The current locally built application is 998,976 bytes and used a 1,310,720-byte application slot. `BUILD-MANIFEST.json` records its hash, source hashes and the library versions resolved for that build.
 
 The original `platformio.ini` library constraints are preserved. They permit compatible updates, so check the resolved libraries against the manifest when reproducing the tested environment. Identical binary hashes after a fresh build are not asserted; build paths, timestamps and dependency resolution can differ.
 
@@ -38,6 +44,7 @@ After the PlatformIO build has resolved the dependencies, use Python 3, `clang++
 ```sh
 python3 tests/run_controller_r5_tests.py
 python3 tests/run_controller_r51_defaults_tests.py
+python3 tests/run_calibration_tests.py
 python3 tests/run_standalone_tests.py
 node tests/run_controller_r5_ui_tests.mjs
 ```

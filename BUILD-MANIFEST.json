@@ -1,21 +1,21 @@
 {
-  "build": "HF controller 2026-10-20 r5.1",
-  "bytes": 997024,
-  "sha256": "dff48594e5197fd33c8e05f20a6b0a44d08b379ecb21cb4043d36df8a3465f82",
-  "md5": "06a49a122e54e010434c5f848eff9fd4",
+  "build": "HF controller 2026-10-21 r5.2",
+  "bytes": 998976,
+  "sha256": "eb430c5e7358a01f40e7356367bd76fa391487337e0acf554280f977b16b5737",
+  "md5": "a6779371f61e9d04b0d12d31a300505d",
   "application_slot_capacity": 1310720,
   "application_only": true,
   "platform": "espressif32@6.12.0",
   "framework": "Arduino ESP32 2.0.17",
   "board": "esp32-c3-devkitm-1",
-  "flash_usage_elf_bytes": 957146,
-  "ram_usage_bytes": 92628,
+  "flash_usage_elf_bytes": 958960,
+  "ram_usage_bytes": 92660,
   "source_sha256": {
     "data/addresses.json": "47007141027261f487a8a3de541000ccd05353f3c29d389c4f04739fa9dd7d45",
     "data/configs.json": "3727dfad56e90e0dee6beef8f75f3ed4e4f831238a065a1d58cad6fb54911c66",
     "data/icon.png": "4212f83f975a28f5bce8a8544a169dfee479c03d4f45d284a9d954faa4981afb",
-    "data/index.html": "61e7f0669a6ee6bc5987315b4531d0641c0fd431553380fdcf9e0684c9f56dc7",
-    "data/script.js": "cbfdff1545b1dccec3a2cfc5b5d647edee900fcab55ad65ea33f3bd8f1a6e33f",
+    "data/index.html": "41533690b50127ca59cd086bf3beaba22b9843e6fc0ff24d8a835dbedf4688c2",
+    "data/script.js": "8a98daf26c8a6f52c52277bd09230a41a525db89b6aac6492022c6983298f4e0",
     "data/setup.html": "738b11694c2b80eba604e11b8f6d217a80af5a66dc5730a21a5a8441be8fe7c8",
     "data/style.css": "eb40f5113e2115c20c6170bdb3f3a1800772b31e81bb555688b4be5a4dc8201a",
     "data/upload.css": "f94db5979529d325647750d100a67ef8332e6cba671dfefe332e6dd35de0f5ea",
@@ -28,14 +28,15 @@
     "include/README": "af0e186680b645fa539e1db9ec876c13bc54478bbd967c1a916bf486f15a11c4",
     "include/bench_page.h": "1043e6b3d1bde0bdf89434f4e3e36a8737d68abad3858310f7ae21ee89976b89",
     "include/bench_recording.h": "df5a48dcb8906914229cc54082d1b5c5dd04a535ad6bc2a9ab004b25b49893b8",
-    "include/controller_assets.h": "430bbfc7ac2753fdc0684780e85571f894eb489a9c199cbe8655906c4ccf2860",
-    "include/controller_validation.h": "33d85a0a7a43a93fa91cd2800171daa78fd18504c34ac634537ab342dd6386f9",
+    "include/controller_assets.h": "172d52c5338740d0ed59b09a75f732c5ccbcb602ccebabcba31d21c6748d31be",
+    "include/controller_validation.h": "29a737e67ea1625789e9125421d7668344adaa1ab89e8910ad98c1b3ca5faea9",
     "include/sensor_wait.h": "dd46b9baf94cf653b607baf8a6405ef8f6e086fb545ece7fa8f83634e310e633",
     "platformio.ini": "f09a4d4f7c6ac90803125043208fd64475bd15fc8a9417b4879829b0b1aa591a",
-    "src/bench_mode.cpp": "cdeb2e41630986033f9d1be14ca282f44c2f2c375554f219e4c5b0f334538ca5",
+    "src/bench_mode.cpp": "92ba293c6c339b860699b53ba357fc729f0daa27e62fa8cde7c00191803c3fa7",
     "src/filehandling.cpp": "1d0abaf79963f33029a861d749cb298d0a5eabf6906ae49f0394bc4a20095b38",
     "src/filehandling.h": "8e905d531ed214d0c0da9585a7d71974c74baa89159d67e7d5ac13083a7b1723",
-    "src/main.cpp": "4a71e11b3f9cb43caa7b7f4a23876bd1be913ca23c3d504241ce2f58f1e6ac10"
+    "src/main.cpp": "388243d2554e55d68292d0fc0b9ccc7175cd7d31872c3cedad4661a16c0f54eb",
+    "include/calibration_session.h": "c76231b397628d5a57947e0ad7b3ef887eacf06f88adefd66987c62b63922398"
   },
   "binary": "HF-Controller-R5.1-With-Recorder-2026-10-20.bin",
   "status": "Experimental integration; retained built application, not a general release or universal updater",
@@ -46,5 +47,6 @@
     "ESP32Servo": "1.2.1",
     "TickTwo": "4.4.0",
     "QuickPID": "3.1.9"
-  }
+  },
+  "hardware_verified": false
 }

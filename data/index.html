@@ -6,11 +6,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     
     <link rel="stylesheet" type="text/css" href="style.css" />
-    <title>Hydrofoil Control R5.1</title>
+    <title>Hydrofoil Control R5.2</title>
   </head>
   <body>
     <div class="topnav">
-      <h1>Hydrofoil Control R5.1</h1>
+      <h1>Hydrofoil Control R5.2</h1>
     </div>
     <div class="content">
 <div class="card"><p id="mode-status">Connecting…</p><p id="save-status" role="status"></p>
@@ -97,7 +97,7 @@
         />
         <span id="slider-enable-value" class="value">0</span><br />
 
-        <label for="slider-calibration">Enable Calibration</label>
+        <label for="slider-calibration">Calibration (0 = OFF, 1 = ON)</label>
         <input
           type="range"
           id="slider-calibration"
@@ -107,7 +107,7 @@
           value="0"
           style="width: 25px"
         />
-        <span id="slider-calibration-value" class="value">0</span><br />
+        <span id="slider-calibration-value" class="value">0</span><br /><p id="calibration-status" role="status">Turn ON, raise and lower the sensor in water, then turn OFF to save.</p>
 
         <label for="slider-servo-min">Servo min position (us)</label>
         <input

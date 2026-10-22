@@ -17,6 +17,7 @@ extern std::vector<int> rawValues;
 extern hw_timer_t *timer;
 extern Servo elevator;
 void startMeasurement();
+bool calibrationSampling();
 constexpr int capacitancePin = 6;
 #include <WebServer.h>
 #include <Update.h>
@@ -94,7 +95,7 @@ void serviceBenchSamples() {
   if (benchRecording.dueToFinish(now))
     stopBenchSamples(bench_recording::FinishReason::Completed);
   if (!benchSingle &&
-      (!benchAutomatic || uint32_t(now - benchLastSample) < 10))
+      ((!benchAutomatic && !calibrationSampling()) || uint32_t(now - benchLastSample) < 10))
     return;
   benchSingle = false;
   benchLastSample = now;
@@ -172,7 +173,7 @@ void collectBenchStaticDiagnostics() {
   if (benchStaticCollected) return;
   benchStaticCollected = true;
   auto &doc = benchStaticDiagnostics;
-  doc["build"] = "HF controller 2026-10-20 r5.1";
+  doc["build"] = "HF controller 2026-10-21 r5.2";
   doc["reset_reason"] = int(esp_reset_reason());
   doc["mac"] = WiFi.softAPmacAddress();
   doc["chip"] = ESP.getChipModel();

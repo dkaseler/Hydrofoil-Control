@@ -45,6 +45,8 @@ fs_stub = baseline_fixture("filesystem_fs_stub")
 
 stubs = r'''
 #include "controller_validation.h"
+#include "calibration_session.h"
+CalibrationSession calibrationSession;String calibrationNotice;
 #include <cassert>
 #include <cmath>
 #include <cstring>
@@ -66,7 +68,7 @@ float input=1450,output=120,setpoint=1700;
 std::vector<int> rawValues(20,12000);
 const char *jsonConfigsPath="/configs.json",*jsonWifiPath="/wifi.json";
 String controllerError="Invalid settings",boardSelector="slave-2";
-String macAddresses[2]={"02:00:00:00:01:28","02:00:00:00:02:D2"};
+String macAddresses[2]={"CC:BA:97:47:BE:28","DC:06:75:34:23:D2"};
 struct FakePid {
  enum class Control{manual,timer};Control mode=Control::timer;
  unsigned resets=0,tunings=0;uint32_t sampleUs=0;
@@ -95,7 +97,7 @@ dataStruct values(int offset){return {1.25f+offset*0.25f,0.25f,0.125f,1600+offse
 dataStruct defaults(){return {1,0,0,1500,1,1000,2000,40,0,2000,24000};}
 allBoards boardsParams={values(0),values(1),values(2)},savedConfigs{};
 dataStruct controlParams=values(2);
-struct FakeWiFi {String station="02:00:00:00:02:D0";String macAddress(){return station;}} WiFi;
+struct FakeWiFi {String station="DC:06:75:34:23:D0";String macAddress(){return station;}} WiFi;
 struct FakeServer {
  std::map<std::string,String> args;int code=0;unsigned responses=0;
  bool hasArg(const char *name){return args.count(name);}
@@ -153,7 +155,7 @@ void same(const dataStruct &a,const dataStruct &b){assert(std::memcmp(&a,&b,size
 void same(const allBoards &a,const allBoards &b){same(a.master,b.master);same(a.slave1,b.slave1);same(a.slave2,b.slave2);}
 void resetCase(){
  benchActive=true;otaInProgress=false;benchFilesystem=true;settingsReady=false;
- first=false;slave=false;restartPending=false;WiFi.station="02:00:00:00:02:D0";
+ first=false;slave=false;restartPending=false;WiFi.station="DC:06:75:34:23:D0";
  sensorHealthy=true;positionValid=true;receiverValid=true;servoTimeOut=true;
  simulateSensorTimeout=false;benchAutomatic=true;benchSingle=true;
  control=180;pwmRead=1900;median=12000;position=1450;servoPos=1850;receiverLastValid=1234;
@@ -171,7 +173,7 @@ void resetCase(){
   {"/addresses.json","unchanged-peer-addresses"},{"/recording.csv","unchanged-recording"},
   {"/index.html","unchanged-legacy-page"}};
  operations.clear();benchServer=FakeServer{};
- benchServer.args={{"expected-mac","02:00:00:00:02:D0"},{"confirm","reset-controller-settings"}};
+ benchServer.args={{"expected-mac","DC:06:75:34:23:D0"},{"confirm","reset-controller-settings"}};
 }
 void unaffectedFiles(){
  assert(otherWrites==0 && SPIFFS.writeOpens==0 && SPIFFS.renameCalls==0);
@@ -180,7 +182,7 @@ void unaffectedFiles(){
  assert(SPIFFS.files.at("/addresses.json")=="unchanged-peer-addresses");
  assert(SPIFFS.files.at("/recording.csv")=="unchanged-recording");
  assert(SPIFFS.files.at("/index.html")=="unchanged-legacy-page");
- assert(macAddresses[0]=="02:00:00:00:01:28" && macAddresses[1]=="02:00:00:00:02:D2");
+ assert(macAddresses[0]=="CC:BA:97:47:BE:28" && macAddresses[1]=="DC:06:75:34:23:D2");
  assert(resumes==0 && peerSends==0 && !restartPending);
  assert(elevator.attaches==0 && elevator.writes==0 && !elevator.attached());
  assert(lockDepth==0 && benchServer.responses==1);
@@ -231,8 +233,8 @@ int main(){
  for(int gate=0;gate<3;++gate){resetCase();if(gate==0)benchActive=false;
   if(gate==1)otaInProgress=true;if(gate==2)benchFilesystem=false;rejectedWithoutWrites();}
  std::cout << "PASS: active-control, OTA and missing-filesystem gates reject without writes\n";
- for(const char *bad:{"", "02:00:00:00:02:D1", "02:00:00:00:01:28", "02:00:00:00:02",
-  "02:00:00:00:02:D0:00", "02:00:00:00:02:DG", "00:00:00:00:00:00", "FF:FF:FF:FF:FF:FF"}){
+ for(const char *bad:{"", "DC:06:75:34:23:D1", "CC:BA:97:47:BE:28", "DC:06:75:34:23",
+  "DC:06:75:34:23:D0:00", "DC:06:75:34:23:DG", "00:00:00:00:00:00", "FF:FF:FF:FF:FF:FF"}){
   resetCase();benchServer.args["expected-mac"]=bad;rejectedWithoutWrites();}
  resetCase();benchServer.args.erase("expected-mac");rejectedWithoutWrites();
  for(const char *bad:{"", "yes", "reset-controller-settings ", "reset-controller-setting"}){
@@ -264,7 +266,7 @@ int main(){
   resetCase();flags["first"]=falseFlag;flags["slave"]=trueFlag;slave=true;success();
   resetCase();flags["first"]=trueFlag;flags["slave"]=falseFlag;first=true;success();
  }
- resetCase();benchServer.args["expected-mac"]="02-00-00-00-02-d0";success();
+ resetCase();benchServer.args["expected-mac"]="dc-06-75-34-23-d0";success();
  resetCase();elevator.connected=true;success();
  resetCase();settingsReady=true;success();
  resetCase();boardsParams={};controlParams={};success();

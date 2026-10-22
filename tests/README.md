@@ -1,3 +1,7 @@
+# Calibration-aware test coverage
+
+Run `python3 tests/run_calibration_tests.py` in addition to the general regression, defaults, standalone header and browser UI suites listed in the repository README. The dedicated suite extracts the actual calibration-aware slider/apply, acquisition, bench sampling, resume and peer handlers. General tests retain shared stubs but skip obsolete modes/settings/packet-handler cases; their replacement coverage is in the calibration suite. Validation still independently tests malformed ESP-NOW packets. These are host/mock checks, not a substitute for hardware validation.
+
 # Host checks
 
 Run the commands in the repository README after a PlatformIO build resolves `QuickPID` and `ArduinoJson` into `.pio/libdeps/esp32-c3-devkitm-1/`. The controller test also accepts `--dependency-root PATH` to an existing environment dependency directory. It does not install or copy dependencies.

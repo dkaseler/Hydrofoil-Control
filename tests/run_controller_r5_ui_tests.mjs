@@ -7,6 +7,7 @@ import vm from 'node:vm';
 import {fileURLToPath} from 'node:url';
 
 const project=process.argv[2]??'.';
+
 const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..',project);
 const read=p=>fs.readFileSync(path.join(root,p),'utf8');
 const controller=read('data/script.js'), html=read('data/index.html'), setup=read('data/setup.html');
@@ -47,6 +48,7 @@ const posts=h=>h.calls.filter(c=>c.method==='POST');
 
 let releaseSlave=null,saveFails=false,loadFails=false;
 const h=harness(controller,html,({url,method})=>{
+  if(url==='/diagnostics')return response({calibration_active:true,calibration_samples:40,calibration_range_ready:true});
   if(url==='/device-status')return response({slave:false,controller_mode:'bench'});
   if(url==='/get-addresses')return response({broadcastAddress0:'AA:BB:CC:DD:EE:FF'});
   if(url==='/get-values')return response({'PID-input':1500});

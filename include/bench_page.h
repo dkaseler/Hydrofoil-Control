@@ -13,7 +13,7 @@ const char kBenchPage[] PROGMEM = R"HFHTML(<!doctype html>
 </style>
 </head>
 <body><main>
-<h1>Hydrofoil bench recorder</h1><p><a href="/">Controller sliders</a></p><form action="/controller/resume" method="post"><button type="submit">Resume normal controller</button></form><p id="control-mode">Checking controller mode…</p>
+<h1><strong id="recorder-board">—</strong> · Recorder</h1><p><a href="/">Controller</a></p><form action="/controller/resume" method="post"><button type="submit">Resume normal controller</button></form><p id="control-mode">Checking controller mode…</p>
 <p class="subtle">Starting any bench action pauses control and disables servo output. Finishing a recording leaves control paused. Keep the servo unplugged during bench work.</p>
 <div id="connection" class="connection" role="status">Connecting to the board...</div>
 <noscript><p class="nojs">This page needs JavaScript to show recordings. The basic sensing controls and Diagnostics link below still work.</p></noscript>
@@ -142,8 +142,8 @@ async function poll(){
   try{
     const response=await fetch('/diagnostics',{cache:'no-store'});
     if(!response.ok)throw new Error('Board response '+response.status);
-    const data=await response.json();render(data);connected=true;byId("control-mode").textContent=data.controller_mode==="bench"?"Bench mode — servo output off":"Normal controller active — a bench action will pause it";
-    message('connection','Connected · '+data.build);setControls();
+    const data=await response.json();render(data);connected=true;byId("control-mode").textContent=data.controller_mode==="center-test"?"Alignment test — fixed servo pulse active; a bench action stops the test":data.controller_mode==="bench"?"Bench mode — servo output off":"Normal controller active — a bench action will pause it";
+    byId('recorder-board').textContent=(data.ssid||'—').slice(-2)+' · '+(data.slave?'Slave':'Master');message('connection','Connected · '+data.build);setControls();
     await loadChart(data.recording);
   }catch(error){connected=false;message('connection','Connection unavailable. Displayed values may be old; an active recording continues on the board. '+error.message,true);setControls();}
   finally{polling=false;pollTimer=setTimeout(poll,refreshRequested?50:1000);refreshRequested=false;}

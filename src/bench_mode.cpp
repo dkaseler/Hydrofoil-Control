@@ -173,7 +173,7 @@ void collectBenchStaticDiagnostics() {
   if (benchStaticCollected) return;
   benchStaticCollected = true;
   auto &doc = benchStaticDiagnostics;
-  doc["build"] = "HF controller 2026-10-21 r5.2";
+  doc["build"] = "HF controller 2026-10-28 r5.5";
   doc["reset_reason"] = int(esp_reset_reason());
   doc["mac"] = WiFi.softAPmacAddress();
   doc["chip"] = ESP.getChipModel();

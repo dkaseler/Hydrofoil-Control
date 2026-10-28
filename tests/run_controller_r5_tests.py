@@ -13,7 +13,7 @@ import tempfile
 ROOT = Path(__file__).resolve().parents[1]
 parser = argparse.ArgumentParser()
 parser.add_argument("--only", choices=("sensor", "quickpid", "filesystem", "validation", "receiver", "modes", "settings", "packets", "task"))
-parser.add_argument("--project", default=".")
+parser.add_argument("--project", choices=("controller-r5", "controller-r5.1"), default="controller-r5")
 OPTIONS = parser.parse_args()
 SELECTED = OPTIONS.only
 PROJECT = ROOT / OPTIONS.project
@@ -33,8 +33,6 @@ def function(source, name):
 
 
 def run_cpp(name, code, includes=(), extra_sources=(), files=None):
-    if name in ("modes", "settings", "packets"):
-        return  # Covered against actual calibration-aware handlers by run_calibration_tests.py.
     if SELECTED and SELECTED != name:
         return
     with tempfile.TemporaryDirectory(prefix="hydrofoil-r5-" + name + "-") as temp:
@@ -83,8 +81,6 @@ int digitalRead(int) {
   return (!stuckLow && clockTicks >= riseAt) ? HIGH : LOW;
 }
 struct {void println(const char*){assert(interruptsEnabled);}} Serial;
-#include "calibration_session.h"
-CalibrationSession calibrationSession;
 std::vector<int> rawValues;
 bool sensorHealthy=false, positionValid=false;
 uint32_t sensorTimeouts=0, sensorGoodSamples=0, sensorLastTicks=0;
@@ -144,12 +140,13 @@ int main() {
   controlParams.minMeasured=24000; controlParams.maxMeasured=2000;
   calculatePid(); assert(!positionValid && elevator.writes==previousWrites);
   controlParams.calibration=1;
-  calibrationSession.begin();
-  calibrationSession.observe(12000);
-  calculatePosition();assert(!positionValid);
-  calibrationSession.observe(16000);
-  rawValues.assign(20,16000);calculatePosition();assert(positionValid && position==2000);
-  calibrationSession.finish();controlParams.calibration=0;
+  controlParams.minMeasured=25000; controlParams.maxMeasured=0;
+  calculatePosition();
+  assert(controlParams.minMeasured==12000 && controlParams.maxMeasured==12000 && !positionValid);
+  rawValues.assign(20,16000); calculatePosition();
+  assert(positionValid && position==2000);
+  controlParams.calibration=0;
+  std::cout << "PASS: empty/reversed calibration holds output; two distinct calibration values establish position\n";
 
   // Use the actual command mapping; reversed endpoint order is intentional.
   controlParams.minMeasured=2000; controlParams.maxMeasured=24000;
@@ -179,7 +176,7 @@ sensor_code = sensor_stubs + "\n".join(function(SOURCE, name) for name in
 run_cpp("sensor", sensor_code)
 
 # Exercise the pinned real QuickPID library, not a copy of the PID arithmetic.
-quickpid_dir = PROJECT / ".pio/libdeps/esp32-c3-devkitm-1/QuickPID/src"
+quickpid_dir = ROOT / "repair/.pio/libdeps/esp32-c3-devkitm-1/QuickPID/src"
 setup = function(SOURCE, "setup")
 if SELECTED in (None, "quickpid"):
     assert "SetSampleTimeUs(10000)" in function(SOURCE, "resumeController")
@@ -423,7 +420,7 @@ int main(){
   std::cout << "PASS: Wi-Fi single-property update preserves unrelated fields and rejects failed writes\n";
 }
 '''
-json_dir = PROJECT / ".pio/libdeps/esp32-c3-devkitm-1/ArduinoJson/src"
+json_dir = ROOT / "repair/.pio/libdeps/esp32-c3-devkitm-1/ArduinoJson/src"
 run_cpp("filesystem", filesystem_code, includes=(PROJECT / "src", json_dir),
         extra_sources=(PROJECT / "src/filehandling.cpp",),
         files={"Arduino.h": filesystem_arduino_stub, "SPIFFS.h": filesystem_fs_stub})
@@ -461,9 +458,8 @@ int main(){
   }
   data=validParams();data.calibration=1;data.minMeasured=25000;data.maxMeasured=0;
   assert(validControlParams(data));
-  // R5.2 stores incomplete ranges so OFF can always exit calibration; resume checks usability.
-  data.calibration=0;assert(validControlParams(data));
-  data.minMeasured=12000;data.maxMeasured=12000;assert(validControlParams(data));
+  data.calibration=0;assert(!validControlParams(data));
+  data.minMeasured=12000;data.maxMeasured=12000;assert(!validControlParams(data));
   std::cout << "PASS: control validation rejects nonfinite/range-invalid values and permits reversed servo endpoints\n";
   uint8_t destination[6]={1,2,3,4,5,6};
   const uint8_t expected[6]={0xCC,0xBA,0x97,0x47,0xBE,0x28};
@@ -813,7 +809,7 @@ if SELECTED is None:
     assert "enterBenchMode(" in bench_source
     loop=function(SOURCE,"loop")
     assert "if(!otaInProgress)" in loop
-    assert "if(benchActive){ControlLock lock;serviceBenchSamples();}" in loop
+    assert "if(benchActive)serviceBenchSamples();" in loop
     assert "ArduinoOTA.handle();" in loop
     assert "setupBenchRoutes();" in setup
     assert 'xTaskCreate(runControllerTask,"foil-control",4096,nullptr,2,' in setup

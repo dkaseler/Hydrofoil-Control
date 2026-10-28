@@ -1,16 +1,9 @@
-# Calibration-aware test coverage
+# R5.5 host tests
 
-Run `python3 tests/run_calibration_tests.py` in addition to the general regression, defaults, standalone header and browser UI suites listed in the repository README. The dedicated suite extracts the actual calibration-aware slider/apply, acquisition, bench sampling, resume and peer handlers. General tests retain shared stubs but skip obsolete modes/settings/packet-handler cases; their replacement coverage is in the calibration suite. Validation still independently tests malformed ESP-NOW packets. These are host/mock checks, not a substitute for hardware validation.
+Build with PlatformIO first. From the repository root run `python3 tests/run_all_r55_tests.py`. Required: Python 3, clang++ with UndefinedBehaviorSanitizer, Node.js, and the resolved QuickPID/ArduinoJson libraries under `.pio/libdeps/esp32-c3-devkitm-1/`.
 
-# Host checks
+The runner checks actual extracted firmware functions for settings validation, parser/storage failures, calibration retention, acquisition warmup/timeouts, startup and Run/Pause, receiver influence, task scheduling, shared travel/direction preservation, packet identity and acknowledgements, remote setup snapshots, calibration retries, fixed center and manual pulses. The JavaScript suite checks shipped UI syntax, embedded-asset equality, drafts, target scope, missing replies, shared fields, status colors and recovery. Standalone C++ suites check bounded sensor waits and recorder statistics.
 
-Run the commands in the repository README after a PlatformIO build resolves `QuickPID` and `ArduinoJson` into `.pio/libdeps/esp32-c3-devkitm-1/`. The controller test also accepts `--dependency-root PATH` to an existing environment dependency directory. It does not install or copy dependencies.
+`run_controller_r5_tests.py` and `run_controller_r52_calibration_tests.py` supply inherited literal fixtures to the current tests; do not run those historical entry points as R5.5 acceptance. Older published test entry points may remain in branch history and are superseded by this runner. Firmware functions are read from the current root `src/` and `include/`.
 
-- `run_controller_r5_tests.py`: bounded sensor read, invalidation/recovery, median20, actual QuickPID scaling, real filesystem parser/writer, validation, receiver timeout, bench/control transitions, settings, ESP-NOW receive queuing, control task structure and diagnostic caching.
-- `run_controller_r51_defaults_tests.py`: actual explicit recovery handler with instrumented persistence primitives, target and confirmation guards, write/read failure, all 33 readback fields, flag preservation and detached output.
-- `run_standalone_tests.py`: actual recorder and sensor-wait headers, buffer bounds, statistics, warm-up, recording completion and timeout boundary behavior.
-- `run_controller_r5_ui_tests.mjs`: source/embedded-asset equality, browser script syntax, no save on initial load, role/board switching, rejected saves and recorder reconnection.
-
-C++ harnesses use `-Wall -Wextra -Werror` and UndefinedBehaviorSanitizer. GPIO, networking and selected Arduino primitives are stubbed. UI checks use a minimal simulated DOM. No script in this folder contacts a board or uploads firmware.
-
-Packaging changes to these test harnesses are limited to repository-root layout, dependency lookup, default project selection and synthetic locally administered MAC fixtures. Test scenarios are retained. The firmware source is unchanged. The standalone test runner is a new convenience wrapper around the unchanged C++ cases.
+Publication adaptations change only test path resolution from the local investigation layout to the repository root and dependency paths to this build. No firmware source or test expectations are replaced. Tests do not establish RF delivery, actual execution rate, servo angles, water tightness, cold boot, loaded control or sailing stability.

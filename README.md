@@ -1,64 +1,58 @@
-# Hydrofoil Control — R5.2 experimental integration
+# Hydrofoil Control R5.5 — one Wi-Fi for normal setup
 
-This is a bench-tested development variant of [Tamas Nagy’s Hydrofoil Control](https://github.com/makszimilien/Hydrofoil-Control), based on upstream commit `313d65f16c7b0e84973f84f94e2e8b482160a663`. “R5”, “R5.1” and “R5.2” are local development labels, not upstream release names.
+**October 28, 2026 · experimental field-test candidate. Built and host-tested; R5.5 is not yet installed or tested on the boat.** The two project boards still run R5.4.1. R5.5 is a development revision of this fork, not an upstream official release.
 
-The main aim is to keep the web interface and Wi-Fi service responsive when the capacitance sensor does not complete a reading. This integration also adds a separate control task, diagnostic recording, and explicit settings recovery. It is offered for review and selective incorporation. It is not an on-water validated release.
+R5.5 brings everyday two-board setup onto the master's Wi-Fi: control, tuning, calibration, live readings and actual saved settings. It retains application-only Wi-Fi updates and the 30-second diagnostic recorder. Each board still runs its own sensor and servo loop; the master is a configuration interface, not a source of continuous servo commands for the slave.
 
-## Calibration correction
+## At the water's edge
 
-Calibration ON starts a fresh candidate range without erasing the saved range. Valid sensor samples continue to accumulate while normal control is paused, even without a recorder running. OFF saves a usable candidate; otherwise it retains the previous range and still turns calibration off. An unusable saved range prevents resuming control rather than trapping the toggle ON. Persistence failures are reported and do not pretend the save succeeded. Restarted calibration requires OFF then ON to begin again.
+After both boards have R5.5 and have been paired in Device setup, join the **master's Wi-Fi** and open **http://192.168.4.1/**. The heading shows the actual network-name suffix and Master/Slave role; suffixes are discovered, never hardcoded.
 
-The interface reports candidate progress, saved-range status and save results. Host tests exercise actual slider, acquisition, bench, resume and peer handlers. This correction retains the existing 2 ms sensing cutoff and normal controller behavior; temporary 50/500 ms and creator-style diagnostic experiments are excluded. Current package hardware calibration, paired radio and loaded operation remain unverified; earlier R5.1 observations below are historical evidence, not validation of this new binary.
+- **Control:** see each board's state and Run/Pause both. Amber means paused; red means a fault or missing current status. Text identifies the state as well as color. Pause switches servo output off; it does not change saved tuning. Normal control starts automatically at power-on when settings and calibration are usable.
+- **Set up & tune:** choose either board's name button, or Both. Individual views show that board's actual saved settings, fresh sensor/servo readings, calibration, Run/Pause and direction. Edits remain drafts until Apply. Both applies common P/I/D, Set Point, receiver influence and, by default, travel bounds. Different saved values remain blank and marked Different until a common value is entered.
+- **Test:** center both at exactly **1500 microseconds**, or enter a reference pulse for one servo. Center ignores trim and direction. Manual values use the receiving board's saved endpoint order: reversed boards mirror around 1500, so reference 1600 becomes actual 1400. The actual command is displayed. Manual tests bypass travel limits, so begin near center and work outward while checking the linkage. End test & run/pause returns to normal operation or switches output off.
 
-## Contents and behavior
+Calibration is individual: select a board, Start, move its sensor from fully out of water to the intended immersion depth and back a few times, then Finish & save. A usable candidate replaces that board's saved range; no usable new range retains the previous range. Finish leaves that board paused. A restarted/interrupted calibration needs Finish followed by Start for a new session. Calibration is never copied between boards.
 
-- `src/`, `include/`, `data/` and `platformio.ini` contain the R5.2 calibration correction on the existing R5.1 integration.
-- The normal controller is at `/`, testing and CSV recording at `/bench`, and role/peer setup at `/setup`.
-- Sensor waits are bounded at approximately 2 ms. A failed reading invalidates the rolling window and suspends PID updates; 20 fresh readings are required before normal calculation resumes. The last commanded servo pulse is held during a normal-control sensor fault; it is not a boat-specific fail-safe policy.
-- Normal acquisition targets 500 Hz with a 100 Hz PID cadence. The separate bench recorder targets 100 Hz for 30 seconds. Bench/test actions pause the controller and detach software servo output; resuming control is explicit.
-- Static image/partition metadata is cached before serving diagnostics. UI files are embedded in the application, so application-only updates do not depend on replacing old filesystem HTML.
-- The board provides its own `HF-Bench-<AP-MAC-without-colons>` access point in either role. This integration uses that direct access point; entering router credentials is not needed for its normal UI. HTTP and ArduinoOTA access are unauthenticated, intended for a controlled development environment.
-- R5.1 adds only an explicit defaults-recovery endpoint and version labels relative to R5. It does not change R5’s sensor/control logic or master/slave packet layout. Defaults recovery requires paused bench mode, matching station MAC, and explicit confirmation; it remains paused and does not replace Wi-Fi or peer files. MAC matching protects against an accidental wrong target; it is not authentication.
+Shared travel uses lower/upper bounds while retaining each board's direction. For example, 1200–1800 becomes 1800/1200 on a reversed board and 1200/1800 on a normal board. A travel change pauses the affected board; use Run in Control afterward. Shared saves are confirmed independently, not atomically or simultaneously. Unconfirmed means no matching reply was received; the change may have arrived. Inspect current readback before retrying. There is no automatic settings push at boot or pairing.
 
-## Build
+Normal operation always uses the water-height sensor. **Set Point** uses the calibrated 1000–2000 scale; 1500 is its midpoint. Receiver influence remains an optional offset to that target; 0% adds none and a stale receiver adds zero. Receiver-only mode is removed. Legacy mode fields remain in storage/protocol layouts and normalize to sensor control without rewriting other settings at boot.
 
-Use Python 3 and PlatformIO Core. The tested build used PlatformIO Core 6.2.0, `espressif32@6.12.0`, Arduino ESP32 2.0.17 and the `esp32-c3-devkitm-1` environment.
+## What still needs direct board Wi-Fi
+
+Firmware updates, initial role/peer setup, recovery, detailed diagnostics and full 30-second recordings still use the board being accessed. The recorder is under Test → Recording & diagnostics and explicitly names its connected board. Both boards must have this R5.5 revision before relying on its remote setup, shared travel and name discovery.
+
+## Sensor construction is fundamental
+
+**The sensor strip must be electrically isolated at all costs.** Seal the sensing copper on both faces, every edge, both ends and the wire junction, including its backside against the printed mast. The ground electrode intentionally contacts water.
+
+Front-only tape and longer timeouts did not cure immersion-dependent failures. Insulating both faces produced 17,732 good readings and zero timeouts across six user recordings; a separate helper capture brings the unique total to 20,681. These were T1/50 ms diagnostic tests, not R5.5 tests. The precise ingress route was not proven. See [sensor findings](SENSOR-INSULATION.md). Coating abrasion, long soaking and salt-water operation remain to be checked.
+
+## Build and checks
+
+The target is ESP32-C3, PlatformIO `esp32-c3-devkitm-1`, `espressif32@6.12.0`, Arduino ESP32 2.0.17. Tested with PlatformIO Core 6.2.0. Install PlatformIO in a Python virtual environment, then:
 
 ```sh
-python3 -m venv .venv
-. .venv/bin/activate
-python -m pip install platformio==6.2.0
 pio run -e esp32-c3-devkitm-1
+python3 tests/run_all_r55_tests.py
 ```
 
-The application is produced at `.pio/build/esp32-c3-devkitm-1/firmware.bin`. The current locally built application is 998,976 bytes and used a 1,310,720-byte application slot. `BUILD-MANIFEST.json` records its hash, source hashes and the library versions resolved for that build.
+Tests require Python 3, clang++ with UndefinedBehaviorSanitizer and Node.js. Build first to resolve QuickPID and ArduinoJson. [Test instructions](tests/README.md) describe coverage and portability adjustments. [TEST-RESULTS.md](TEST-RESULTS.md) distinguishes software checks from physical evidence. [BUILD-MANIFEST.json](BUILD-MANIFEST.json) records the retained candidate binary, dependency versions and firmware-input hashes. Build-path/timestamp differences can change a rebuilt binary's hash.
 
-The original `platformio.ini` library constraints are preserved. They permit compatible updates, so check the resolved libraries against the manifest when reproducing the tested environment. Identical binary hashes after a fresh build are not asserted; build paths, timestamps and dependency resolution can differ.
+The application is `.pio/build/esp32-c3-devkitm-1/firmware.bin`. UI assets are embedded in the application; `data/` contains matching source and generic blank credentials/empty peers. **Do not upload the filesystem over an existing board's saved configuration.** Existing-device installation is application-only after checking exact identity, chip, partition capacity and current firmware. Normal control may start after the update reboot, just as it does at power-on. No universal uploader or complete-flash rollback is included.
 
-The supplied `data/wifi.json` has blank credentials and `data/addresses.json` has no peers. These are generic source defaults, not board backups. The existing controller’s measured calibration/settings are in its filesystem. This source package does not include an uploader or an instruction to overwrite that filesystem. Existing-device upgrades were application-only, after confirming chip, target identity, image and compatible partition capacity. Do not assume this application is compatible with an arbitrary ESP32 or partition layout.
+## Timing and limits
 
-## Software checks
+Normal sensing retains the approximately **2 ms** bounded acquisition, target 500 Hz sampling and 100 Hz PID cadence. Twenty fresh successful readings are required after a timeout before filtered control resumes. A normal-control sensor timeout holds the last commanded servo pulse; it does not automatically switch output off. The separate 30-second recorder targets 100 Hz and records actual timestamps. Diagnostic T1/50 ms, T2/500 ms and creator-style C1 experiments are retired and are not this controller.
 
-After the PlatformIO build has resolved the dependencies, use Python 3, `clang++` with UndefinedBehaviorSanitizer, and Node.js:
+Remote snapshots expire after 3.5 seconds. Stale state is shown as unconfirmed and editing is disabled. Explicit Apply, calibration and test commands use matched acknowledgements, bounded retries and duplicate/stale-command checks. A displayed servo pulse is a command, not measured shaft position or foil angle.
 
-```sh
-python3 tests/run_controller_r5_tests.py
-python3 tests/run_controller_r51_defaults_tests.py
-python3 tests/run_calibration_tests.py
-python3 tests/run_standalone_tests.py
-node tests/run_controller_r5_ui_tests.mjs
-```
+R5.5 has no physical two-board, cold-power-cycle, loaded or on-water acceptance yet. Its inherited HTTP/OTA access and ESP-NOW trust model are for a controlled development setup, not an authenticated deployment. [FIELD-TEST-PLAN.md](FIELD-TEST-PLAN.md) is the next acceptance record, not a claim that testing has occurred.
 
-These tests compile the actual firmware routines into host harnesses, exercise parser/write failures and settings validation, and execute the shipped browser scripts against a simulated DOM. `tests/README.md` explains coverage and the packaging-only adaptations. They do not substitute for radio, timing or physical servo tests.
+## History and next work
 
-## Observed bench results and limits
-
-On the R5 board, normal acquisition averaged about 499.60 Hz during a deliberately stalled HTTP request, with no sensor timeouts. A forced timeout left diagnostics accessible, and real readings recovered. A complete 30-second bench recording had 2,973 valid samples, no timeouts and all 2,954 populated median values recomputed correctly.
-
-On a second board running this exact R5.1 application, normal acquisition produced 2,516 good readings over 5,055 ms (497.725 Hz), with no normal timeouts. The deliberate timeout check left HTTP access available; sensing and controller output generation recovered. All 33 factory defaults were written and read back after an explicit reset request. That board did not repeat the stalled-client or full recording tests.
-
-Physical servo direction/travel, final sensor calibration, actual paired-board delivery, loaded control and on-water behavior have not been established by these checks. Factory calibration values are placeholders. The source retains some older bench-only comments from earlier development; the running behavior is the integrated controller described above. No original full-flash backup or guaranteed rollback is provided.
+[CHANGELOG.md](CHANGELOG.md) records R5 through R5.5 and the retired sensing experiments. [ROADMAP.md](ROADMAP.md) separates immediate field acceptance from possible later improvements. The working R5.4.1 setup already demonstrated calibration, confirmed tuning transfer and the intended opposite electrical pulses producing the same physical AoA direction. Those observations do not validate the new R5.5 remote protocol on hardware.
 
 ## Attribution and license
 
-Original software copyright (c) 2025 Tamas Nagy. The upstream `LICENSE` is included verbatim. Although its heading says “MIT License,” it contains additional non-commercial-use, attribution and hardware-exclusion conditions; it should not be described as standard MIT. This package does not relicense the upstream software or include rights to the hardware design. Libraries are obtained through PlatformIO and retain their own licenses.
+Based on Tamas Nagy's Hydrofoil Control. The upstream [LICENSE](LICENSE) is retained verbatim. Its title says MIT License, but its text includes additional non-commercial, attribution and hardware-exclusion conditions; this project does not relicense the original software or hardware. PlatformIO libraries retain their own licenses.

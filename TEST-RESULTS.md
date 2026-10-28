@@ -1,19 +1,22 @@
-# R5.2 calibration correction validation — October 21, 2026
+# R5.5 verification — October 28, 2026
 
-The current source compiles for ESP32-C3 using espressif32 6.12.0. See BUILD-MANIFEST.json for this build; no binary release or board-specific uploader is included.
+Status: experimental field-test candidate, not installed. Both project boards remain R5.4.1.
 
-Checks cover calibration candidate/saved-range separation, OFF after empty/equal ranges, legacy incomplete ranges, persistence failure, valid-only sampling and median warmup, calibration in paused bench mode without recording, interrupted startup, resume gating, and slave-local range persistence. General regressions cover sensor bounds/recovery, PID, filesystem, validation/packet parsing, receiver timeout and task gates. Defaults recovery, standalone recorder headers, embedded asset equality and mocked browser UI checks are included.
+## Completed software checks
 
-Run the commands in README.md. Calibration-aware modes/settings/peer-handler coverage resides in tests/run_calibration_tests.py; historical assertions for those handlers in the general harness are not executed. No claim is made that this package has been validated for loaded servo operation or paired radio. Sensor insulation experiments and longer timeout builds are excluded.
+- ESP32-C3 PlatformIO build of the candidate: passed. Portable repository-root source build: passed.
+- Portable `python3 tests/run_all_r55_tests.py`: passed. Includes shared settings/identity, acquisition and calibration, legacy sensor-mode normalization, remote setup/readback/calibration, center/manual tests, QuickPID scaling, filesystem failure/round-trip tests, validation, receiver influence, startup/modes, task/locking gates, standalone sensor wait/recorder, and UI behavior/embedded assets.
+- Firmware-input files in the public package match the prepared local source byte-for-byte. LICENSE remains unchanged. Test path adaptations are documented in tests/README.md.
+- Simulated phone views for running, paused, fault, first calibration, calibration in progress and offline states were inspected during development. Per-board colors and mixed states were reviewed. Preview data cannot command a real board.
 
-## Historical R5.1 evidence (different binary)
+Candidate binary and source hashes are recorded in BUILD-MANIFEST.json. Host tests use mocked peripherals and storage/radio fault injection; they are not a timing or electrical simulation.
 
-# Package checks — October 20, 2026
+## Earlier physical evidence, not R5.5 acceptance
 
-The repository-root copy passed the controller, explicit defaults recovery, recorder/header and embedded UI suites. C++ harnesses used strict warnings and UndefinedBehaviorSanitizer. The controller suite used the existing tested R5.1 QuickPID/ArduinoJson dependency directory through `--dependency-root`; the package does not include that cache. Fresh dependency installation was not repeated.
+Both boards received R5.4.1 with settings/roles/peers/calibration preserved and active normal control after OTA restart. User confirmed calibration and settings-transfer behavior in earlier R5.3 work. After correcting direction, a manual reference of 1600 increased both foils' AoA: port actual 1400, starboard actual 1600. Center 1500 produced roughly matching AoA. Electrical pulse readouts are commanded values; physical AoA was observed by the user, not instrumented here.
 
-All 25 source/build/data files recorded in `BUILD-MANIFEST.json` match the tested firmware inputs byte-for-byte. The upstream license is byte-for-byte identical. No firmware rebuild or hardware write was performed for packaging. Hardware results in README are prior observations and are identified by firmware version.
+Sensor sealing: six T1/50 ms user captures contained 17,732 good readings/zero timeouts; with a separate helper capture, 20,681 unique good readings/zero timeouts. They followed sealing both faces of the sensing strip. Exact ingress route and indefinite durability were not established.
 
-The source defaults contain empty credentials and no peers. Source and exact compiled application were checked for known private board identifiers, personal paths, router name and common token/private-key patterns; none were found. This is a bounded scan, not proof against every possible secret. Local board histories, captures, upload scripts and toolchain caches are omitted.
+## Still unverified
 
-Test fixtures use synthetic addresses. Changes to the test harnesses are listed in `tests/README.md`; firmware source was not changed to package or run them.
+R5.5 installation, real paired-radio remote setup/calibration, current source's physical startup/recovery, standalone cold power cycle, measured loaded response, final travel clearance, long-term coating durability and on-water stability. Use FIELD-TEST-PLAN.md to record these results. No board update or servo command was performed during publication.
